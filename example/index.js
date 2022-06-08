@@ -1,3 +1,3 @@
-import {InflowSource} from "../dist/src/inflow-source"
+import { InflowSource } from "../dist/src/inflow-source.js"
 
-InflowSource.set()
+(new InflowSource()).set()

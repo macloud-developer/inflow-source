@@ -20,6 +20,9 @@
   },
   "homepage": "https://github.com/macloud-developers/inflow-source#readme",
   "devDependencies": {
+    "@types/jest": "^28.1.1",
+    "jest": "^28.1.1",
+    "ts-jest": "^28.0.4",
     "typescript": "^4.6.3"
   },
   "dependencies": {

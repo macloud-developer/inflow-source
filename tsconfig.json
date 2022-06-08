@@ -9,7 +9,23 @@
     "allowJs": true,
     "moduleResolution": "node",
     "declaration": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "rootDir": ".",
+    "esModuleInterop": true,
+    "paths": {
+      "~~/*": [
+        "./*"
+      ],
+      "@@/*": [
+        "./*"
+      ],
+      "~/*": [
+        "./src/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
   "include": [
     "src"

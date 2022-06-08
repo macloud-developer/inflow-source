@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "inflow source を front 側で保存するためのライブラリ",
   "main": "dist/main.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack --config webpack.config.js --mode=development",
-    "build": "webpack --config webpack.config.js --mode=production"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",

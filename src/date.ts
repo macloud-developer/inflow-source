@@ -8,11 +8,15 @@ export interface CustomDate extends Dayjs {
 }
 
 export default function useDate() {
+  const format = (value: string, format: string = 'YYYY/MM/DD'): string => {
+    return dayjs(value).format(format)
+  }
   const create = (date: string | CustomDate): CustomDate => {
     return dayjs(date)
   }
 
   return {
+    format,
     create
   }
 }

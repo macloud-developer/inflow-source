@@ -11,5 +11,3 @@ export class InflowSource {
         console.log('set')
     }
 }
-
-new InflowSource()

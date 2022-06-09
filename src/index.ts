@@ -1,4 +1,4 @@
-import useDate, {CustomDate} from './date'
+import useDate, { CustomDate } from './date'
 import { useUserAgent } from './user-agent'
 
 export type InflowSourceParams = {
@@ -37,12 +37,27 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
         }
     }
 
+    const setLastUrl = (currentUrl: URL | undefined, ignorePathRegexpList: string[]): void => {
+        ignorePathRegexpList = ignorePathRegexpList ?? []
+        if (typeof currentUrl === 'undefined') {
+            return
+        }
+
+        const isIgnorePathMatched = ignorePathRegexpList.some((ignorePathRegexp) => {
+            return currentUrl.pathname.search(ignorePathRegexp) !== -1
+        })
+        if (isIgnorePathMatched) {
+            return
+        }
+
+        storage.setItem('last_page_url', currentUrl.pathname)
+    }
+
     const set = (
         currentDate: CustomDate,
         referer?: URL,
         currentUrl?: URL,
-        inboundLinkDmaiMap?: InboundLinkDmaiMap,
-        ignorePathRegexpList?: string[]
+        inboundLinkDmaiMap?: InboundLinkDmaiMap
     ): void => {
         inboundLinkDmaiMap = inboundLinkDmaiMap ?? {}
         const hasInboundLinkDmai = (landingPageUrl: URL): boolean => {
@@ -59,23 +74,6 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
             }
             return inboundLinkDmaiMap[dmai].company_id
         }
-
-        const setLastUrl = (currentUrl: URL | undefined): void => {
-            if (typeof currentUrl === 'undefined') {
-                return
-            }
-
-            const isIgnorePathMatched = ignorePathRegexpList.some((ignorePathRegexp) => {
-                return currentUrl.pathname.search(ignorePathRegexp) !== -1
-            })
-            if (isIgnorePathMatched) {
-                return
-            }
-
-            storage.setItem('last_page_url', currentUrl.pathname)
-        }
-
-        setLastUrl(currentUrl)
 
         if (isLanding(currentDate, referer, currentUrl)) {
             if (typeof referer !== 'undefined' && referer.origin !== canonicalBaseUrl()) {
@@ -189,6 +187,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
 
     return {
         getAllParams,
-        set
+        set,
+        setLastUrl
     }
 }

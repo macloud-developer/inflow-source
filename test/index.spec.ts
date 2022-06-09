@@ -135,7 +135,7 @@ describe('~/index', () => {
     expect(storage.getItem('landing_page_url')).toBe('/documents/4')
   })
 
-  test('not determine when callback from facebook', () => {
+  test('not determine when landing parameter is false', () => {
     // 初回だから保存する
     inflowSource.set(
       useDate().create('2022-03-09 00:00:00'),
@@ -289,7 +289,10 @@ describe('~/index', () => {
     inflowSource.set(
       useDate().create('2022-03-09 00:00:00'),
       undefined,
-      new URL('http://localhost/offers?dmai=dummy')
+      new URL('http://localhost/offers?dmai=dummy'),
+      {
+        a6253af2818a6f: {company_id: 10984}
+      }
     )
     expect(storage.getItem('utm_source')).toBeNull()
   })
@@ -298,7 +301,11 @@ describe('~/index', () => {
     inflowSource.set(
       useDate().create('2022-03-09 00:00:00'),
       undefined,
-      new URL('http://localhost/offers?dmai=a6253af2818a6f')
+      new URL('http://localhost/offers?dmai=a6253af2818a6f'),
+      {
+        a6253af2818a6f: { company_id: 10984 },
+        a6246861584662: { company_id: 11132 }
+      }
     )
     expect(storage.getItem('utm_source')).toBe('referral')
     expect(storage.getItem('utm_medium')).toBe('bs')
@@ -307,7 +314,11 @@ describe('~/index', () => {
     inflowSource.set(
       useDate().create('2022-03-09 00:00:01'),
       undefined,
-      new URL('http://localhost/offers?dmai=a6246861584662')
+      new URL('http://localhost/offers?dmai=a6246861584662'),
+      {
+        a6253af2818a6f: { company_id: 10984 },
+        a6246861584662: { company_id: 11132 }
+      }
     )
     expect(storage.getItem('utm_source')).toBe('referral')
     expect(storage.getItem('utm_medium')).toBe('bs')
@@ -318,7 +329,10 @@ describe('~/index', () => {
     inflowSource.set(
       useDate().create('2022-03-09 00:00:00'),
       undefined,
-      new URL('http://localhost/offers?dmai=a6253af2818a6f&utm_source=123')
+      new URL('http://localhost/offers?dmai=a6253af2818a6f&utm_source=123'),
+      {
+        a6253af2818a6f: { company_id: 10984 }
+      }
     )
     expect(storage.getItem('utm_source')).not.toBe('123')
     expect(storage.getItem('utm_source')).toBe('referral')

@@ -10,7 +10,6 @@
     "moduleResolution": "node",
     "declaration": true,
     "allowSyntheticDefaultImports": true,
-    "rootDir": ".",
     "esModuleInterop": true,
     "paths": {
       "~~/*": [

@@ -2,11 +2,11 @@ import { useInflowSource } from '~/index'
 import useDate from '~/date'
 
 describe('~/compositions/common/inflow-source', () => {
-  const storage = global.localStorage as Storage
+  const storage = localStorage as Storage
   const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'))
 
   beforeEach(() => {
-    global.localStorage.clear()
+    localStorage.clear()
     process.env.BASE_URL = 'https://macloud.jp'
   })
 

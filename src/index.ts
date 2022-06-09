@@ -54,12 +54,14 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
     }
 
     const set = (
-        currentDate: CustomDate,
+        rawCurrentDate: Date | CustomDate,
         referer?: URL,
         currentUrl?: URL,
         inboundLinkDmaiMap?: InboundLinkDmaiMap
     ): void => {
         inboundLinkDmaiMap = inboundLinkDmaiMap ?? {}
+        const currentDate = useDate().create(rawCurrentDate)
+
         const hasInboundLinkDmai = (landingPageUrl: URL): boolean => {
             const dmai = landingPageUrl.searchParams.get('dmai')
             if (!dmai) {

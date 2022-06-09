@@ -1,10 +1,9 @@
 {
   "name": "@macloud-developer/inflow-source",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "inflow source を front 側で保存するためのライブラリ",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"

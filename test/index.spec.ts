@@ -1,13 +1,36 @@
 import { useInflowSource } from '~/index'
 import useDate from '~/date'
 
-describe('~/compositions/common/inflow-source', () => {
-  const storage = localStorage as Storage
+describe('~/index', () => {
+  const localStorage = () => {
+    const storage: {[key: string]: string} = {}
+    const clear = () => {
+      for (const key in storage) {
+        removeItem(key)
+      }
+    }
+    const getItem = (key: string): string | null => {
+      return storage[key]?? null
+    }
+    const setItem = (key: string, value: string): void => {
+      storage[key] = value
+    }
+    const removeItem = (key: string): void => {
+      delete storage[key];
+    }
+    return {
+      clear,
+      getItem,
+      setItem,
+      removeItem
+    }
+  }
+
+  const storage = localStorage() as Storage
   const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'))
 
   beforeEach(() => {
-    localStorage.clear()
-    process.env.BASE_URL = 'https://macloud.jp'
+    storage.clear()
   })
 
   test('determine as landing after 30 minutes', () => {

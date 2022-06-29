@@ -50,7 +50,42 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
             return
         }
 
+        // TODO: 後続 PR で絶対パスに直す
         storage.setItem('last_page_url', currentUrl.pathname)
+    }
+
+    /**
+     * LP などのサブドメインのサイトから PF に遷移する際に流入情報がクエリパラメータで渡されるので、
+     * PF 遷移直前の流入情報として保存し、クエリパラメータを削除した URL を返却する。
+     */
+    const saveIntraSiteData = (url: URL): URL => {
+        if (typeof url === 'undefined' || ! url.searchParams.has('last_visited_at')) {
+            return url
+        }
+
+        setFromTimestampQueryParams('last_visited_at', url)
+        setFromUrlQueryParams('referer', url)
+        setFromUrlQueryParams('landing_page_url', url)
+        setFromQueryParams('utm_source', url)
+        setFromQueryParams('utm_medium', url)
+        setFromQueryParams('utm_campaign', url)
+        setFromQueryParams('utm_content', url)
+        setFromQueryParams('gclid', url)
+        setFromUrlQueryParams('last_page_url', url)
+        setFromQueryParams('device', url)
+
+        url.searchParams.delete('last_visited_at')
+        url.searchParams.delete('referer')
+        url.searchParams.delete('landing_page_url')
+        url.searchParams.delete('utm_source')
+        url.searchParams.delete('utm_medium')
+        url.searchParams.delete('utm_campaign')
+        url.searchParams.delete('utm_content')
+        url.searchParams.delete('gclid')
+        url.searchParams.delete('last_page_url')
+        url.searchParams.delete('device')
+
+        return url
     }
 
     const set = (
@@ -59,6 +94,8 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
         currentUrl?: URL,
         inboundLinkDmaiMap?: InboundLinkDmaiMap
     ): void => {
+        currentUrl = saveIntraSiteData(currentUrl)
+
         inboundLinkDmaiMap = inboundLinkDmaiMap ?? {}
         const currentDate = useDate().create(rawCurrentDate)
 
@@ -83,6 +120,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
             }
 
             if (typeof currentUrl !== 'undefined') {
+                // TODO: 後続 PR で絶対パスに直す
                 storage.setItem('landing_page_url', currentUrl.pathname)
 
                 if (isUtmParameterSet(currentUrl)) {
@@ -177,14 +215,34 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
         storage.removeItem('utm_content')
     }
 
-    const setFromQueryParams = (key: string, landingPageUrl: URL): void => {
-        const value = landingPageUrl.searchParams.get(key)
+    const setFromQueryParams = (key: string, url: URL): void => {
+        const value = url.searchParams.get(key)
 
         if (value === null) {
             return
         }
 
         storage.setItem(key, value)
+    }
+
+    const setFromUrlQueryParams = (key: string, url: URL): void => {
+        const value = url.searchParams.get(key)
+
+        if (value === null) {
+            return
+        }
+
+        storage.setItem(key, decodeURIComponent(value))
+    }
+
+    const setFromTimestampQueryParams = (key: string, url: URL): void => {
+        const value = url.searchParams.get(key)
+
+        if (value === null) {
+            return
+        }
+
+        storage.setItem(key, useDate().create(Number(value)).format('YYYY-MM-DD HH:mm:ss'))
     }
 
     return {

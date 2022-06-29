@@ -438,4 +438,39 @@ describe('~/index', () => {
 
         expect(storage.getItem('last_page_url')).toBeNull()
     })
+
+    test('save intra site data', () => {
+        const urlSearchParams = new URLSearchParams({
+            last_visited_at: '1656342000000', // 2022-06-28 00:00:00.000
+            referer: 'https%3A%2F%2Ftwitter.com%2Ffoo%2Fbar',
+            landing_page_url: 'https%3A%2F%2Flp.macloud.jp%2F',
+            utm_source: 'newsletter1',
+            utm_medium: 'email',
+            utm_campaign: 'summer-sale',
+            utm_content: 'toplink',
+            gclid: 'Tester123',
+            // FYI: LP は単一ページなので landing_page_url と同じ URL が入る想定だが、
+            //      入力値を区別するために便宜上異なる URL を使う
+            last_page_url: 'https%3A%2F%2Flp.macloud.jp%2Fbaz%2Fqux',
+            device: 'pc'
+        })
+
+        // 渡されたクエリパラメータでデータが更新されるのをテストしたいので、ランディング判定されない情報を引数に渡す
+        inflowSource.set(
+            useDate().create('2022-06-28 00:00:00'),
+            undefined,
+            new URL(`https://macloud.jp/signup/seller?${urlSearchParams.toString()}`)
+        )
+
+        expect(storage.getItem('last_visited_at')).toBe('2022-06-28 00:00:00')
+        expect(storage.getItem('referer')).toBe('https://twitter.com/foo/bar')
+        expect(storage.getItem('landing_page_url')).toBe('https://lp.macloud.jp/')
+        expect(storage.getItem('utm_source')).toBe('newsletter1')
+        expect(storage.getItem('utm_medium')).toBe('email')
+        expect(storage.getItem('utm_campaign')).toBe('summer-sale')
+        expect(storage.getItem('utm_content')).toBe('toplink')
+        expect(storage.getItem('gclid')).toBe('Tester123')
+        expect(storage.getItem('last_page_url')).toBe('https://lp.macloud.jp/baz/qux')
+        expect(storage.getItem('device')).toBe('pc')
+    })
 })

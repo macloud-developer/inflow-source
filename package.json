@@ -1,6 +1,6 @@
 {
   "name": "@macloud-developer/inflow-source",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "inflow source を front 側で保存するためのライブラリ",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/macloud-developers/inflow-source.git"
+    "url": "git+https://github.com/macloud-developer/inflow-source.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/macloud-developers/inflow-source/issues"
+    "url": "https://github.com/macloud-developer/inflow-source/issues"
   },
-  "homepage": "https://github.com/macloud-developers/inflow-source#readme",
+  "homepage": "https://github.com/macloud-developer/inflow-source#readme",
   "devDependencies": {
     "@types/jest": "^28.1.1",
     "jest": "^28.1.1",

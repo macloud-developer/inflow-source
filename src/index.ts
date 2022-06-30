@@ -50,8 +50,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
             return
         }
 
-        // TODO: 後続 PR で絶対パスに直す
-        storage.setItem('last_page_url', currentUrl.pathname)
+        storage.setItem('last_page_url', currentUrl.origin + currentUrl.pathname)
     }
 
     /**
@@ -120,8 +119,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
             }
 
             if (typeof currentUrl !== 'undefined') {
-                // TODO: 後続 PR で絶対パスに直す
-                storage.setItem('landing_page_url', currentUrl.pathname)
+                storage.setItem('landing_page_url', currentUrl.origin + currentUrl.pathname)
 
                 if (isUtmParameterSet(currentUrl)) {
                     clearUtmParameter()

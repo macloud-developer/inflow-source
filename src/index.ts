@@ -1,6 +1,6 @@
 import useDate, { CustomDate } from './date'
 import { useUserAgent } from './user-agent'
-import { useUrl } from '~/url'
+import { useUrl } from './url'
 
 export type InflowSourceParams = {
     referer: string | null,
@@ -19,7 +19,7 @@ export interface InboundLinkDmaiMap {
     [dmai: string]: { company_id: number }
 }
 
-export const useInflowSource = (storage: Storage, baseUrl: URL) => {
+export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedAsExternal?: string[]) => {
     const landingKey = 'landing'
 
     const getAllParams = (): InflowSourceParams => {
@@ -113,7 +113,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
         }
 
         if (isLanding(currentDate, referer, currentUrl)) {
-            if (typeof referer !== 'undefined' && ! useUrl().isOwnedDomain(baseUrl, referer)) {
+            if (typeof referer !== 'undefined' && ! useUrl().isOwnedDomain(baseUrl, referer, domainsRegardedAsExternal)) {
                 storage.setItem('referer', referer.origin + referer.pathname)
             }
 
@@ -178,7 +178,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL) => {
             return true
         }
 
-        if (typeof referer !== 'undefined' && ! useUrl().isOwnedDomain(baseUrl, referer)) {
+        if (typeof referer !== 'undefined' && ! useUrl().isOwnedDomain(baseUrl, referer, domainsRegardedAsExternal)) {
             return true
         }
 

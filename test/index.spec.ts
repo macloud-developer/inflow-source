@@ -27,7 +27,8 @@ describe('~/index', () => {
     }
 
     const storage = localStorage() as Storage
-    const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'))
+    const domainsRegardedAsExternal = ['external.macloud.jp']
+    const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'), domainsRegardedAsExternal)
 
     beforeEach(() => {
         storage.clear()
@@ -83,6 +84,15 @@ describe('~/index', () => {
         )
 
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/offers')
+
+        // 30分経過していないが、 referer のドメインが domainsRegardedAsExternal に含まれるのでランディング判定
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            new URL('https://external.macloud.jp/foo/bar'),
+            new URL('https://macloud.jp/interviews')
+        )
+
+        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/interviews')
 
         // 30分経過していないが、 referer が外部サイトなのでランディング判定
         inflowSource.set(

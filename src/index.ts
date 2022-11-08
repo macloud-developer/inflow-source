@@ -92,6 +92,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedA
         currentUrl?: URL,
         inboundLinkDmaiMap?: InboundLinkDmaiMap
     ): void => {
+        referer = getReferer(currentUrl, referer)
         currentUrl = saveIntraSiteData(currentUrl)
 
         inboundLinkDmaiMap = inboundLinkDmaiMap ?? {}
@@ -142,6 +143,26 @@ export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedA
 
         // isLanding の判定に前回の last_visited_at の値を使うので、 isLanding より前に移動させないこと
         storage.setItem('last_visited_at', currentDate.format('YYYY-MM-DD HH:mm:ss'))
+    }
+
+    /**
+     * referrerが未設定の場合はdocument.referrerから取得する
+     */
+    const getReferer = (currentUrl: URL | undefined, referer: URL | undefined): URL | undefined => {
+        if (referer instanceof URL) {
+            return referer
+        }
+        // ローカルストレージにすでに登録済みであれば再取得しない
+        if (storage.getItem('referer') !== null) {
+            return undefined
+        }
+        // クエリパラメータがある場合は取得しない
+        if (currentUrl instanceof URL && currentUrl.searchParams.has('referer')) {
+            return undefined
+        }
+        return document.referrer !== '' ?
+            new URL(document.referrer) :
+            undefined
     }
 
     /**

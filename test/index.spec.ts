@@ -1,5 +1,10 @@
 import { useInflowSource } from '~/index'
 import useDate from '~/date'
+import { JSDOM } from "jsdom"
+
+const dom = new JSDOM()
+global.document = dom.window.document
+global.window = dom.window as unknown as Window & typeof globalThis
 
 describe('~/index', () => {
     const localStorage = () => {
@@ -31,6 +36,7 @@ describe('~/index', () => {
     const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'), domainsRegardedAsExternal)
 
     beforeEach(() => {
+        Object.defineProperty(global.document, 'referrer', { value: 'https://referrer.test/', configurable: true })
         storage.clear()
     })
 
@@ -161,6 +167,16 @@ describe('~/index', () => {
             new URL('https://macloud.jp/connect_sns?landing=false')
         )
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/offers')
+    })
+
+    test('set referrer is undefined', () => {
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            undefined,
+            new URL('https://macloud.jp/offers')
+        )
+
+        expect(storage.getItem('referer')).toBe('https://referrer.test/')
     })
 
     test('save only current date', () => {

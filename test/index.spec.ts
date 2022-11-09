@@ -1,5 +1,10 @@
 import { useInflowSource } from '~/index'
 import useDate from '~/date'
+import { JSDOM } from "jsdom"
+
+const dom = new JSDOM()
+global.document = dom.window.document
+global.window = dom.window as unknown as Window & typeof globalThis
 
 describe('~/index', () => {
     const localStorage = () => {
@@ -31,6 +36,7 @@ describe('~/index', () => {
     const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'), domainsRegardedAsExternal)
 
     beforeEach(() => {
+        Object.defineProperty(global.document, 'referrer', { value: 'https://referrer.test/', configurable: true })
         storage.clear()
     })
 
@@ -163,6 +169,16 @@ describe('~/index', () => {
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/offers')
     })
 
+    test('set referrer is undefined', () => {
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            undefined,
+            new URL('https://macloud.jp/offers')
+        )
+
+        expect(storage.getItem('referer')).toBe('https://referrer.test/')
+    })
+
     test('save only current date', () => {
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
@@ -208,7 +224,7 @@ describe('~/index', () => {
         inflowSource.set(
             // ランディングの条件（30分経過）を満たすようにする
             useDate().create('2022-03-09 00:30:01'),
-            undefined,
+            new URL('https://twitter.com/foo/bar?a=b&c=d'),
             new URL('https://macloud.jp/baz/qux')
         )
 
@@ -468,7 +484,7 @@ describe('~/index', () => {
         // 渡されたクエリパラメータでデータが更新されるのをテストしたいので、ランディング判定されない情報を引数に渡す
         inflowSource.set(
             useDate().create('2022-06-28 00:00:00'),
-            undefined,
+            new URL('https://sab.macloud.jp/'),
             new URL(`https://macloud.jp/signup/seller?${urlSearchParams.toString()}`)
         )
 

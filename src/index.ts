@@ -152,14 +152,6 @@ export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedA
         if (referer instanceof URL) {
             return referer
         }
-        // ローカルストレージにすでに登録済みであれば再取得しない
-        if (storage.getItem('referer') !== null) {
-            return undefined
-        }
-        // クエリパラメータがある場合は取得しない
-        if (currentUrl instanceof URL && currentUrl.searchParams.has('referer')) {
-            return undefined
-        }
         return document.referrer !== '' ?
             new URL(document.referrer) :
             undefined

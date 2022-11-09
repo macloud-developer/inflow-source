@@ -224,7 +224,7 @@ describe('~/index', () => {
         inflowSource.set(
             // ランディングの条件（30分経過）を満たすようにする
             useDate().create('2022-03-09 00:30:01'),
-            undefined,
+            new URL('https://twitter.com/foo/bar?a=b&c=d'),
             new URL('https://macloud.jp/baz/qux')
         )
 
@@ -484,7 +484,7 @@ describe('~/index', () => {
         // 渡されたクエリパラメータでデータが更新されるのをテストしたいので、ランディング判定されない情報を引数に渡す
         inflowSource.set(
             useDate().create('2022-06-28 00:00:00'),
-            undefined,
+            new URL('https://sab.macloud.jp/'),
             new URL(`https://macloud.jp/signup/seller?${urlSearchParams.toString()}`)
         )
 

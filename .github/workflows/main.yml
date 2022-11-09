@@ -9,7 +9,13 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1 
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.13.2
+      - uses: szenius/set-timezone@v1.0
+        with:
+          timezoneLinux: "Asia/Tokyo"
       - name: npm install
         run: npm install
       - name: Run Jest

@@ -32,8 +32,7 @@ describe('~/index', () => {
     }
 
     const storage = localStorage() as Storage
-    const domainsRegardedAsExternal = ['external.macloud.jp']
-    const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'), domainsRegardedAsExternal)
+    const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'))
 
     beforeEach(() => {
         Object.defineProperty(global.document, 'referrer', { value: 'https://referrer.test/', configurable: true })
@@ -75,7 +74,15 @@ describe('~/index', () => {
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/ma_diagnosis')
     })
 
-    test('determine as landing by new channel', () => {
+    test('determine as landing by referrer domain', () => {
+        const inflowSource = useInflowSource(
+            storage,
+            new URL('https://macloud.jp'),
+            {
+                domainsRegardedAsExternal: ['external.macloud.jp']
+            }
+        )
+
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             new URL('https://twitter.com/foo/bar'),
@@ -108,6 +115,14 @@ describe('~/index', () => {
         )
 
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/interviews/1')
+    })
+
+    test('determine as landing by utm parameters or gclid', () => {
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            new URL('https://twitter.com/foo/bar'),
+            new URL('https://macloud.jp/offers')
+        )
 
         // 30分経過していないが、新しい UTM パラメータなのでランディング判定
         inflowSource.set(
@@ -210,8 +225,7 @@ describe('~/index', () => {
         expect(storage.getItem('utm_campaign')).toBe('summer-sale')
         expect(storage.getItem('utm_content')).toBe('toplink')
         expect(storage.getItem('gclid')).toBe('Tester123')
-        // TODO: setLastUrl()の処理をsetに移すときにコメントアウト解除
-        // expect(storage.getItem('last_page_url')).toBe('/baz/qux')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
     })
 
     test('not update when new value is null', () => {
@@ -272,11 +286,6 @@ describe('~/index', () => {
             new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email&utm_campaign=summer-sale&utm_content=toplink&gclid=Tester123')
         )
 
-        inflowSource.setLastUrl(
-            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email&utm_campaign=summer-sale&utm_content=toplink&gclid=Tester123'),
-            []
-        )
-
         expect(inflowSource.getAllParams()).toEqual({
             referer: 'https://twitter.com/foo/bar',
             landingPageUrl: 'https://macloud.jp/baz/qux',
@@ -318,27 +327,43 @@ describe('~/index', () => {
     })
 
     test('has not matched inbound link dmai', () => {
+        const inflowSource = useInflowSource(
+            storage,
+            new URL('https://macloud.jp'),
+            {
+                inboundLinkDmaiMap: {
+                    a6253af2818a6f: { company_id: 10984 },
+                }
+            },
+        )
+
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             undefined,
             new URL('http://localhost/offers?dmai=dummy'),
-            {
-                a6253af2818a6f: { company_id: 10984 }
-            }
         )
+
         expect(storage.getItem('utm_source')).toBeNull()
     })
 
     test('has matched inbound link dmai', () => {
+        const inflowSource = useInflowSource(
+            storage,
+            new URL('https://macloud.jp'),
+            {
+                inboundLinkDmaiMap: {
+                    a6253af2818a6f: { company_id: 10984 },
+                    a6246861584662: { company_id: 11132 },
+                }
+            },
+        )
+
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             undefined,
             new URL('http://localhost/offers?dmai=a6253af2818a6f'),
-            {
-                a6253af2818a6f: { company_id: 10984 },
-                a6246861584662: { company_id: 11132 }
-            }
         )
+
         expect(storage.getItem('utm_source')).toBe('referral')
         expect(storage.getItem('utm_medium')).toBe('bs')
         expect(storage.getItem('utm_content')).toBe('10984')
@@ -347,25 +372,30 @@ describe('~/index', () => {
             useDate().create('2022-03-09 00:00:01'),
             undefined,
             new URL('http://localhost/offers?dmai=a6246861584662'),
-            {
-                a6253af2818a6f: { company_id: 10984 },
-                a6246861584662: { company_id: 11132 }
-            }
         )
+
         expect(storage.getItem('utm_source')).toBe('referral')
         expect(storage.getItem('utm_medium')).toBe('bs')
         expect(storage.getItem('utm_content')).toBe('11132')
     })
 
     test('has matched inbound link dmai and utm', () => {
+        const inflowSource = useInflowSource(
+            storage,
+            new URL('https://macloud.jp'),
+            {
+                inboundLinkDmaiMap: {
+                    a6253af2818a6f: { company_id: 10984 },
+                }
+            },
+        )
+
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             undefined,
             new URL('http://localhost/offers?dmai=a6253af2818a6f&utm_source=123'),
-            {
-                a6253af2818a6f: { company_id: 10984 }
-            }
         )
+
         expect(storage.getItem('utm_source')).not.toBe('123')
         expect(storage.getItem('utm_source')).toBe('referral')
         expect(storage.getItem('utm_medium')).toBe('bs')
@@ -373,93 +403,88 @@ describe('~/index', () => {
     })
 
     test('check override last_page_url', () => {
-        inflowSource.setLastUrl(
+        const inflowSource = useInflowSource(
+            storage,
+            new URL('https://macloud.jp'),
+            {
+                ignorePathRegexpList: ['/someone_other_url.*']
+            },
+        )
+
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            undefined,
             new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email&utm_campaign=summer-sale&utm_content=toplink&gclid=Tester123'),
-            []
         )
 
         expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
 
-        inflowSource.setLastUrl(
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            undefined,
             new URL('https://macloud.jp/offers?utm_source=newsletter1&utm_medium=email&utm_campaign=summer-sale&utm_content=toplink&gclid=Tester123'),
-            [
-                '/someone_other_url.*'
-            ]
         )
 
         expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/offers')
     })
 
     test('check NOT override last_page_url', () => {
-        inflowSource.setLastUrl(
-            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email&utm_campaign=summer-sale&utm_content=toplink&gclid=Tester123'),
-            []
+        const inflowSource = useInflowSource(
+            storage,
+            new URL('https://macloud.jp'),
+            {
+                ignorePathRegexpList: [
+                    '/foo.*',
+                    '/bar/baz.*',
+                    '/qux/\\d+',
+                    '/quux/\\d+/corge.*',
+                ]
+            },
         )
 
-        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            undefined,
+            new URL('https://macloud.jp/offers?utm_source=newsletter1&utm_medium=email&utm_campaign=summer-sale&utm_content=toplink&gclid=Tester123'),
+        )
 
-        /* privacy policy, cookie policyは corp サイトにあるので処理が走らないのでここのリストに入れない */
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/offers')
+
+        // ignorePathRegexpList のパターンのいずれかに合致する URL たち
         const urls = [
-            '/provisional_register',
-            '/provisional_register/',
-            /* 未知の存在しないページが新設されても除外対象になる */
-            '/provisional_register_hogehoge',
-            '/provisional_register?utm_source=newsletter1',
-            '/acquirer_register',
-            '/connect_sns',
-            '/definitive_register',
-            '/provisional_register/email',
-            '/provisional_register/email_sent',
-            '/terms_of_service/seller',
-            '/acquirer_terms',
-            '/connect_sns/facebook/confirm',
-            '/request_catalog',
-            '/consulting_apply',
-            '/consulting_apply/confirm',
-            '/offers/1/consulting_apply',
-            '/offers/20/consulting_apply',
-            '/offers/1/consulting_apply/confirm',
-            '/login',
-            '/business/login'
+            '/foo',
+            '/fooooo',
+            '/foo/',
+            '/foo/abc',
+            '/bar/baz',
+            '/qux/1',
+            '/qux/123',
+            '/quux/1/corge',
         ]
         urls.forEach((currentUrlString) => {
-            inflowSource.setLastUrl(
-                new URL('https://macloud.jp' + currentUrlString),
-                [
-                    '/provisional_register.*',
-                    '/acquirer_register.*',
-                    '/connect_sns.*',
-                    '/definitive_register.*',
-                    '/terms_of_service.*',
-                    '/acquirer_terms.*',
-                    '/request_catalog.*',
-                    '/consulting_apply.*',
-                    '/offers/\\d+/consulting_apply.*',
-                    '/login.*',
-                    '/business/login.*'
-                ]
+            inflowSource.set(
+                useDate().create('2022-03-09 00:00:00'),
+                undefined,
+                new URL(`https://macloud.jp${currentUrlString}`),
             )
         })
 
-        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/offers')
     })
 
     test('check landing on ignored last_page_url', () => {
-        inflowSource.setLastUrl(
-            new URL('https://macloud.jp/provisional_register'),
-            [
-                '/provisional_register.*',
-                '/acquirer_register.*',
-                '/connect_sns.*',
-                '/definitive_register.*',
-                '/terms_of_service.*',
-                '/acquirer_terms.*',
-                '/request_catalog.*',
-                '/consulting_apply.*',
-                '/offers/\\d+/consulting_apply.*',
-                '/login.*',
-                '/business/login.*'
-            ]
+        const inflowSource = useInflowSource(
+            storage,
+            new URL('https://macloud.jp'),
+            {
+                ignorePathRegexpList: ['/foo']
+            },
+        )
+
+        inflowSource.set(
+            useDate().create('2022-03-09 00:00:00'),
+            undefined,
+            new URL('https://macloud.jp/foo'),
         )
 
         expect(storage.getItem('last_page_url')).toBeNull()
@@ -484,7 +509,7 @@ describe('~/index', () => {
         // 渡されたクエリパラメータでデータが更新されるのをテストしたいので、ランディング判定されない情報を引数に渡す
         inflowSource.set(
             useDate().create('2022-06-28 00:00:00'),
-            new URL('https://sab.macloud.jp/'),
+            new URL('https://sub.macloud.jp/'),
             new URL(`https://macloud.jp/signup/seller?${urlSearchParams.toString()}`)
         )
 
@@ -496,7 +521,7 @@ describe('~/index', () => {
         expect(storage.getItem('utm_campaign')).toBe('summer-sale')
         expect(storage.getItem('utm_content')).toBe('toplink')
         expect(storage.getItem('gclid')).toBe('Tester123')
-        expect(storage.getItem('last_page_url')).toBe('https://lp.macloud.jp/baz/qux')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/signup/seller')
         expect(storage.getItem('device')).toBe('pc')
     })
 })

@@ -19,7 +19,21 @@ export interface InboundLinkDmaiMap {
     [dmai: string]: { company_id: number }
 }
 
-export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedAsExternal?: string[]) => {
+export type Options = {
+    domainsRegardedAsExternal?: string[],
+    inboundLinkDmaiMap?: InboundLinkDmaiMap,
+    ignorePathRegexpList?: string[]
+}
+
+export const useInflowSource = (
+    storage: Storage,
+    baseUrl: URL,
+    {
+        domainsRegardedAsExternal = [],
+        inboundLinkDmaiMap = {},
+        ignorePathRegexpList = [],
+    }: Options = {},
+) => {
     const landingKey = 'landing'
 
     const getAllParams = (): InflowSourceParams => {
@@ -36,8 +50,7 @@ export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedA
         }
     }
 
-    const setLastUrl = (currentUrl: URL | undefined, ignorePathRegexpList: string[]): void => {
-        ignorePathRegexpList = ignorePathRegexpList ?? []
+    const setLastUrl = (currentUrl: URL | undefined): void => {
         if (typeof currentUrl === 'undefined') {
             return
         }
@@ -90,12 +103,10 @@ export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedA
         rawCurrentDate: Date | CustomDate,
         referer?: URL,
         currentUrl?: URL,
-        inboundLinkDmaiMap?: InboundLinkDmaiMap
     ): void => {
         referer = getReferer(currentUrl, referer)
         currentUrl = saveIntraSiteData(currentUrl)
 
-        inboundLinkDmaiMap = inboundLinkDmaiMap ?? {}
         const currentDate = useDate().create(rawCurrentDate)
 
         const hasInboundLinkDmai = (landingPageUrl: URL): boolean => {
@@ -140,6 +151,8 @@ export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedA
                 }
             }
         }
+
+        setLastUrl(currentUrl)
 
         // isLanding の判定に前回の last_visited_at の値を使うので、 isLanding より前に移動させないこと
         storage.setItem('last_visited_at', currentDate.format('YYYY-MM-DD HH:mm:ss'))
@@ -258,6 +271,5 @@ export const useInflowSource = (storage: Storage, baseUrl: URL, domainsRegardedA
     return {
         getAllParams,
         set,
-        setLastUrl
     }
 }

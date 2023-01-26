@@ -37,7 +37,7 @@ export const useInflowSource = (
     const landingKey = 'landing'
 
     const getAllParams = (): InflowSourceParams => {
-        //現在日時どうとれば良いのだろう
+        const currentDate = useDate().create(Date())
         if (isOver1hour(currentDate.format('YYYY-MM-DD HH:mm:ss'))) {
             deleteUtmParam()
         }

@@ -37,6 +37,11 @@ export const useInflowSource = (
     const landingKey = 'landing'
 
     const getAllParams = (): InflowSourceParams => {
+        //現在日時どうとれば良いのだろう
+        if (isOver1hour(currentDate.format('YYYY-MM-DD HH:mm:ss'))) {
+            deleteUtmParam()
+        }
+
         return {
             referer: storage.getItem('referer'),
             landingPageUrl: storage.getItem('landing_page_url'),
@@ -99,6 +104,19 @@ export const useInflowSource = (
         return url
     }
 
+    const isOver1hour = (currentDate: string): boolean => {
+        const last_visited_at = storage.getItem('last_visited_at')
+        if (!last_visited_at) {
+            return false
+        }
+        //現時間が最終訪問時間から1時間以上であるか判定
+        return true
+    }
+
+    const deleteUtmParam = (): void => {
+        //utmパラメータをローカルストレージから削除する処理を記載
+    }
+
     const set = (
         rawCurrentDate: Date | CustomDate,
         referer?: URL,
@@ -108,6 +126,10 @@ export const useInflowSource = (
         currentUrl = saveIntraSiteData(currentUrl)
 
         const currentDate = useDate().create(rawCurrentDate)
+
+        if (isOver1hour(currentDate.format('YYYY-MM-DD HH:mm:ss'))) {
+            deleteUtmParam()
+        }
 
         const hasInboundLinkDmai = (landingPageUrl: URL): boolean => {
             const dmai = landingPageUrl.searchParams.get('dmai')
@@ -269,7 +291,7 @@ export const useInflowSource = (
     }
 
     return {
-        getAllParams,
+        getAllParams, //この2つが外だしされている
         set,
     }
 }

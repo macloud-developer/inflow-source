@@ -228,6 +228,7 @@ describe('~/index', () => {
         expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
     })
 
+    //ここコンフリクトする
     test('not update when new value is null', () => {
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),

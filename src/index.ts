@@ -110,18 +110,12 @@ export const useInflowSource = (
         const hasLastVisitedAtInStorage = (storage: Storage): boolean => {
             return !!storage.getItem('last_visited_at');
         }
-        const removeUtmParamInStorage = (storage: Storage): void => {
-            storage.removeItem('utm_source')
-            storage.removeItem('utm_medium')
-            storage.removeItem('utm_campaign')
-            storage.removeItem('utm_content')
-        }
 
         if (hasLastVisitedAtInStorage(storage)) {
             const lastVisitedAt = useDate().create(storage.getItem('last_visited_at'))
 
             if (useDate().hasElapsedOneHour(rawCurrentDate, lastVisitedAt)) {
-                removeUtmParamInStorage(storage)
+                clearUtmParameter()
             }
         }
 

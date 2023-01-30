@@ -16,7 +16,6 @@ export default function useDate() {
   }
 
   const hasElapsedOneHour = (currentDate: Date | CustomDate, targetDate: CustomDate): boolean => {
-    //targetDateがrawCurrentDateより未来日時が渡されたらエラー
     if (targetDate.isAfter(currentDate)) {
       throw new Error('rawCurrentDateより未来に日時をtargetDateに指定できません')
     }

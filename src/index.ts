@@ -37,7 +37,6 @@ export const useInflowSource = (
     const landingKey = 'landing'
 
     const getAllParams = (): InflowSourceParams => {
-
         return {
             referer: storage.getItem('referer'),
             landingPageUrl: storage.getItem('landing_page_url'),
@@ -288,7 +287,7 @@ export const useInflowSource = (
     }
 
     return {
-        getAllParams, //この2つが外だしされている
+        getAllParams,
         set,
     }
 }

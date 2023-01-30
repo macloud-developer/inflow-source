@@ -127,7 +127,6 @@ export const useInflowSource = (
             const lastVisitedAt = useDate().create(storage.getItem('last_visited_at'))
 
             if (useDate().hasElapsedOneHour(rawCurrentDate, lastVisitedAt)) {
-                //全てのパラメータ削除に変える
                 clearAllParameter(storage)
             }
         }

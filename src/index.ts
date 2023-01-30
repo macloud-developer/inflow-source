@@ -37,10 +37,6 @@ export const useInflowSource = (
     const landingKey = 'landing'
 
     const getAllParams = (): InflowSourceParams => {
-        const currentDate = useDate().create(Date())
-        if (isOver1hour(currentDate.format('YYYY-MM-DD HH:mm:ss'))) {
-            deleteUtmParam()
-        }
 
         return {
             referer: storage.getItem('referer'),
@@ -104,19 +100,6 @@ export const useInflowSource = (
         return url
     }
 
-    const isOver1hour = (currentDate: string): boolean => {
-        const last_visited_at = storage.getItem('last_visited_at')
-        if (!last_visited_at) {
-            return false
-        }
-        //現時間が最終訪問時間から1時間以上であるか判定
-        return true
-    }
-
-    const deleteUtmParam = (): void => {
-        //utmパラメータをローカルストレージから削除する処理を記載
-    }
-
     const set = (
         rawCurrentDate: Date | CustomDate,
         referer?: URL,
@@ -125,10 +108,22 @@ export const useInflowSource = (
         referer = getReferer(currentUrl, referer)
         currentUrl = saveIntraSiteData(currentUrl)
 
-        const currentDate = useDate().create(rawCurrentDate)
+        const hasLastVisitedAtInStorage = (storage: Storage): boolean => {
+            return !!storage.getItem('last_visited_at');
+        }
+        const removeUtmParamInStorage = (storage: Storage): void => {
+            storage.removeItem('utm_source')
+            storage.removeItem('utm_medium')
+            storage.removeItem('utm_campaign')
+            storage.removeItem('utm_content')
+        }
 
-        if (isOver1hour(currentDate.format('YYYY-MM-DD HH:mm:ss'))) {
-            deleteUtmParam()
+        if (hasLastVisitedAtInStorage(storage)) {
+            const lastVisitedAt = useDate().create(storage.getItem('last_visited_at'))
+
+            if (useDate().hasElapsedOneHour(rawCurrentDate, lastVisitedAt)) {
+                removeUtmParamInStorage(storage)
+            }
         }
 
         const hasInboundLinkDmai = (landingPageUrl: URL): boolean => {
@@ -145,6 +140,8 @@ export const useInflowSource = (
             }
             return inboundLinkDmaiMap[dmai].company_id
         }
+
+        const currentDate = useDate().create(rawCurrentDate)
 
         if (isLanding(currentDate, referer, currentUrl)) {
             if (typeof referer !== 'undefined' && ! useUrl().isOwnedDomain(baseUrl, referer, domainsRegardedAsExternal)) {

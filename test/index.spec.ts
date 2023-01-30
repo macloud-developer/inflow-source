@@ -529,47 +529,63 @@ describe('~/index', () => {
         inflowSource.set(
             useDate().create('2023-01-30 00:00:00'),
             new URL('https://twitter.com/foo/bar?a=b&c=d'),
-            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email1&utm_campaign=summer-sale1&utm_content=toplink1&gclid=Tester123')
+            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email1&utm_campaign=summer-sale1&utm_content=toplink1&gclid=Tester123&device=pc')
         )
 
         expect(storage.getItem('utm_source')).toBe('newsletter1')
         expect(storage.getItem('utm_medium')).toBe('email1')
         expect(storage.getItem('utm_campaign')).toBe('summer-sale1')
         expect(storage.getItem('utm_content')).toBe('toplink1')
+        expect(storage.getItem('gclid')).toBe('Tester123')
+        expect(storage.getItem('referer')).toBe('https://twitter.com/foo/bar')
+        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/qux')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
         expect(storage.getItem('last_visited_at')).toBe('2023-01-30 00:00:00')
 
         inflowSource.set(
             useDate().create('2023-01-30 01:00:00'),
             new URL('https://www.facebook.com/foo/bar'),
-            new URL('https://macloud.jp/baz/aaa')
+            new URL('https://macloud.jp/baz/test')
         )
         expect(storage.getItem('utm_source')).toBeNull()
         expect(storage.getItem('utm_medium')).toBeNull()
         expect(storage.getItem('utm_campaign')).toBeNull()
         expect(storage.getItem('utm_content')).toBeNull()
+        expect(storage.getItem('referer')).toBe('https://www.facebook.com/foo/bar')
+        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/test')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/test')
+        expect(storage.getItem('last_visited_at')).toBe('2023-01-30 01:00:00')
     })
 
     test('not delete utm param by one hour in access', () => {
         inflowSource.set(
             useDate().create('2023-01-30 00:00:00'),
             new URL('https://twitter.com/foo/bar?a=b&c=d'),
-            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email1&utm_campaign=summer-sale1&utm_content=toplink1&gclid=Tester123')
+            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email1&utm_campaign=summer-sale1&utm_content=toplink1&gclid=Tester123&device=pc')
         )
 
         expect(storage.getItem('utm_source')).toBe('newsletter1')
         expect(storage.getItem('utm_medium')).toBe('email1')
         expect(storage.getItem('utm_campaign')).toBe('summer-sale1')
         expect(storage.getItem('utm_content')).toBe('toplink1')
+        expect(storage.getItem('gclid')).toBe('Tester123')
+        expect(storage.getItem('referer')).toBe('https://twitter.com/foo/bar')
+        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/qux')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
         expect(storage.getItem('last_visited_at')).toBe('2023-01-30 00:00:00')
 
         inflowSource.set(
             useDate().create('2023-01-30 00:59:59'),
             new URL('https://www.facebook.com/foo/bar'),
-            new URL('https://macloud.jp/baz/aaa')
+            new URL('https://macloud.jp/baz/test')
         )
         expect(storage.getItem('utm_source')).toBe('newsletter1')
         expect(storage.getItem('utm_medium')).toBe('email1')
         expect(storage.getItem('utm_campaign')).toBe('summer-sale1')
         expect(storage.getItem('utm_content')).toBe('toplink1')
+        expect(storage.getItem('referer')).toBe('https://www.facebook.com/foo/bar')
+        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/test')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/test')
+        expect(storage.getItem('last_visited_at')).toBe('2023-01-30 00:59:59')
     })
 })

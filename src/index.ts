@@ -111,11 +111,24 @@ export const useInflowSource = (
             return !!storage.getItem('last_visited_at');
         }
 
+        const clearAllParameter = (storage: Storage): void => {
+            //last_visited_atは削除対象外
+            storage.removeItem('referer')
+            storage.removeItem('landing_page_url')
+            storage.removeItem('last_page_url')
+            storage.removeItem('utm_source')
+            storage.removeItem('utm_medium')
+            storage.removeItem('utm_campaign')
+            storage.removeItem('utm_content')
+            storage.removeItem('gclid')
+        }
+
         if (hasLastVisitedAtInStorage(storage)) {
             const lastVisitedAt = useDate().create(storage.getItem('last_visited_at'))
 
             if (useDate().hasElapsedOneHour(rawCurrentDate, lastVisitedAt)) {
-                clearUtmParameter()
+                //全てのパラメータ削除に変える
+                clearAllParameter(storage)
             }
         }
 

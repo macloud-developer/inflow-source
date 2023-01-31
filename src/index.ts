@@ -112,7 +112,6 @@ export const useInflowSource = (
         }
 
         const clearAllParameter = (storage: Storage): void => {
-            //last_visited_atは削除対象外
             storage.removeItem('referer')
             storage.removeItem('landing_page_url')
             storage.removeItem('last_page_url')
@@ -121,6 +120,7 @@ export const useInflowSource = (
             storage.removeItem('utm_campaign')
             storage.removeItem('utm_content')
             storage.removeItem('gclid')
+            storage.removeItem('last_visited_at')
         }
 
         if (hasLastVisitedAtInStorage(storage)) {

@@ -35,7 +35,6 @@ describe('~/index', () => {
     const inflowSource = useInflowSource(storage, new URL('https://macloud.jp'))
 
     beforeEach(() => {
-        Object.defineProperty(global.document, 'referrer', { value: 'https://referrer.test/', configurable: true })
         storage.clear()
     })
 
@@ -185,6 +184,7 @@ describe('~/index', () => {
     })
 
     test('set referrer is undefined', () => {
+        Object.defineProperty(global.document, 'referrer', { value: 'https://referrer.test/', configurable: true })
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             undefined,
@@ -229,7 +229,6 @@ describe('~/index', () => {
     })
 
     test('all clear when new value is null', () => {
-        Object.defineProperty(global.document, 'referrer', { value: '', configurable: true })
 
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
@@ -435,7 +434,6 @@ describe('~/index', () => {
     })
 
     test('check NOT override last_page_url', () => {
-        Object.defineProperty(global.document, 'referrer', { value: '', configurable: true })
 
         const inflowSource = useInflowSource(
             storage,

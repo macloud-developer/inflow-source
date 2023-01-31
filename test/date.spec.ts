@@ -17,13 +17,13 @@ describe('~/date', () => {
   })
   test('hasElapsedOneHour_true', () => {
     const currentDate = useDate().create('2023-01-30 13:00:00')
-    const targetDate = useDate().create('2023-01-30 12:00:00')
+    const targetDate = useDate().create('2023-01-30 11:59:59')
     expect(useDate().hasElapsedOneHour(currentDate, targetDate)).toBeTruthy()
   })
 
   test('hasElapsedOneHour_false', () => {
     const currentDate = useDate().create('2023-01-30 13:00:00')
-    const targetDate = useDate().create('2023-01-30 12:00:01')
+    const targetDate = useDate().create('2023-01-30 12:00:00')
     expect(useDate().hasElapsedOneHour(currentDate, targetDate)).toBeFalsy()
   })
 

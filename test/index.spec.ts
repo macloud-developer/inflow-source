@@ -192,6 +192,7 @@ describe('~/index', () => {
         )
 
         expect(storage.getItem('referer')).toBe('https://referrer.test/')
+        Object.defineProperty(global.document, 'referrer', { value: '', configurable: true })
     })
 
     test('save only current date', () => {

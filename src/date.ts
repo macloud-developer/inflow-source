@@ -15,8 +15,17 @@ export default function useDate() {
     return dayjs(date)
   }
 
+  const hasElapsedOneHour = (currentDate: CustomDate, targetDate: CustomDate): boolean => {
+    if (targetDate.isAfter(currentDate)) {
+      throw new Error('rawCurrentDateより未来に日時をtargetDateに指定できません')
+    }
+
+    return currentDate.isAfter(targetDate.add(1, 'h'))
+  }
+
   return {
     format,
-    create
+    create,
+    hasElapsedOneHour
   }
 }

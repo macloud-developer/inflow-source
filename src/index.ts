@@ -107,10 +107,6 @@ export const useInflowSource = (
         referer = getReferer(currentUrl, referer)
         currentUrl = saveIntraSiteData(currentUrl)
 
-        const hasLastVisitedAtInStorage = (storage: Storage): boolean => {
-            return !!storage.getItem('last_visited_at');
-        }
-
         const clearAllParameter = (storage: Storage): void => {
             storage.removeItem('referer')
             storage.removeItem('landing_page_url')
@@ -121,14 +117,6 @@ export const useInflowSource = (
             storage.removeItem('utm_content')
             storage.removeItem('gclid')
             storage.removeItem('last_visited_at')
-        }
-
-        if (hasLastVisitedAtInStorage(storage)) {
-            const lastVisitedAt = useDate().create(storage.getItem('last_visited_at'))
-
-            if (useDate().hasElapsedOneHour(rawCurrentDate, lastVisitedAt)) {
-                clearAllParameter(storage)
-            }
         }
 
         const hasInboundLinkDmai = (landingPageUrl: URL): boolean => {
@@ -149,16 +137,14 @@ export const useInflowSource = (
         const currentDate = useDate().create(rawCurrentDate)
 
         if (isLanding(currentDate, referer, currentUrl)) {
+            clearAllParameter(storage)
+
             if (typeof referer !== 'undefined' && ! useUrl().isOwnedDomain(baseUrl, referer, domainsRegardedAsExternal)) {
                 storage.setItem('referer', referer.origin + referer.pathname)
             }
 
             if (typeof currentUrl !== 'undefined') {
                 storage.setItem('landing_page_url', currentUrl.origin + currentUrl.pathname)
-
-                if (isUtmParameterSet(currentUrl)) {
-                    clearUtmParameter()
-                }
 
                 // 被リンクとして配っているdmaiがきたら
                 if (hasInboundLinkDmai(currentUrl)) {
@@ -199,7 +185,7 @@ export const useInflowSource = (
      * 1. ランディング判定から除外する対象のページでないこと（landing=false クエリパラメータがあるとランディングとしない）
      * 2. 以下のいずれかの条件を満たす
      *   a. 初訪問
-     *   b. 最後に訪問してから30分以上経過
+     *   b. 最後に訪問してから60分以上経過
      *   c. 新しいチャネル情報を持つ
      */
     const isLanding = (currentDate: CustomDate, referer?: URL, landingPageUrl?: URL): boolean => {
@@ -208,6 +194,9 @@ export const useInflowSource = (
                 return false
             }
             return landingPageUrl.searchParams.get(landingKey) === 'false'
+        }
+        const hasLastVisitedAtInStorage = (storage: Storage): boolean => {
+            return !!storage.getItem('last_visited_at');
         }
 
         if (typeof landingPageUrl === 'undefined') {
@@ -218,13 +207,12 @@ export const useInflowSource = (
             return false
         }
 
-        const rawLastVisitedAt = storage.getItem('last_visited_at')
-        if (rawLastVisitedAt === null) {
+        if (!hasLastVisitedAtInStorage(storage)) {
             return true
         }
 
-        const lastVisitedAt = useDate().create(rawLastVisitedAt)
-        if (currentDate.isAfter(lastVisitedAt.add(30, 'minute'))) {
+        const lastVisitedAt = useDate().create(storage.getItem('last_visited_at'))
+        if (useDate().hasElapsedOneHour(currentDate, lastVisitedAt)) {
             return true
         }
 
@@ -246,21 +234,6 @@ export const useInflowSource = (
         return false
     }
 
-    const isUtmParameterSet = (landingPageUrl: URL) => {
-        return (
-            landingPageUrl.searchParams.get('utm_source') ||
-            landingPageUrl.searchParams.get('utm_medium') ||
-            landingPageUrl.searchParams.get('utm_campaign') ||
-            landingPageUrl.searchParams.get('utm_content')
-        )
-    }
-
-    const clearUtmParameter = () => {
-        storage.removeItem('utm_source')
-        storage.removeItem('utm_medium')
-        storage.removeItem('utm_campaign')
-        storage.removeItem('utm_content')
-    }
 
     const setFromQueryParams = (key: string, url: URL): void => {
         const value = url.searchParams.get(key)

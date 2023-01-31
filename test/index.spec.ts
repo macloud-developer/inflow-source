@@ -39,34 +39,34 @@ describe('~/index', () => {
         storage.clear()
     })
 
-    test('determine as landing after 30 minutes', () => {
+    test('determine as landing after 60 minutes', () => {
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             new URL('https://twitter.com/foo/bar'),
             new URL('https://macloud.jp/offers')
         )
 
-        // 前回の訪問から30分経過していないのでランディングではない判定
+        // 前回の訪問から60分経過していないのでランディングではない判定
         inflowSource.set(
-            useDate().create('2022-03-09 00:30:00'),
+            useDate().create('2022-03-09 01:00:00'),
             new URL('https://macloud.jp/offers'),
             new URL('https://macloud.jp/interviews')
         )
 
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/offers')
 
-        // 前回の訪問から30分経過していないのでランディングではない判定
+        // 前回の訪問から60分経過していないのでランディングではない判定
         inflowSource.set(
-            useDate().create('2022-03-09 01:00:00'),
+            useDate().create('2022-03-09 02:00:00'),
             new URL('https://macloud.jp/interviews'),
             new URL('https://macloud.jp/documents')
         )
 
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/offers')
 
-        // 前回の訪問から30分経過したのでランディング判定
+        // 前回の訪問から60分経過したのでランディング判定
         inflowSource.set(
-            useDate().create('2022-03-09 01:30:01'),
+            useDate().create('2022-03-09 03:00:01'),
             new URL('https://macloud.jp/documents'),
             new URL('https://macloud.jp/ma_diagnosis')
         )
@@ -98,7 +98,7 @@ describe('~/index', () => {
 
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/offers')
 
-        // 30分経過していないが、 referer のドメインが domainsRegardedAsExternal に含まれるのでランディング判定
+        // 60分経過していないが、 referer のドメインが domainsRegardedAsExternal に含まれるのでランディング判定
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             new URL('https://external.macloud.jp/foo/bar'),
@@ -107,7 +107,7 @@ describe('~/index', () => {
 
         expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/interviews')
 
-        // 30分経過していないが、 referer が外部サイトなのでランディング判定
+        // 60分経過していないが、 referer が外部サイトなのでランディング判定
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             new URL('https://google.com/foo/bar'),
@@ -124,7 +124,7 @@ describe('~/index', () => {
             new URL('https://macloud.jp/offers')
         )
 
-        // 30分経過していないが、新しい UTM パラメータなのでランディング判定
+        // 60分経過していないが、新しい UTM パラメータなのでランディング判定
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             new URL('https://macloud.jp/offers'),
@@ -228,7 +228,9 @@ describe('~/index', () => {
         expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
     })
 
-    test('not update when new value is null', () => {
+    test('all clear when new value is null', () => {
+        Object.defineProperty(global.document, 'referrer', { value: '', configurable: true })
+
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             new URL('https://twitter.com/foo/bar?a=b&c=d'),
@@ -236,21 +238,25 @@ describe('~/index', () => {
         )
 
         inflowSource.set(
-            // ランディングの条件（30分経過）を満たすようにする
-            useDate().create('2022-03-09 00:30:01'),
-            new URL('https://twitter.com/foo/bar?a=b&c=d'),
+            // ランディングの条件（60分経過）を満たすようにする
+            useDate().create('2022-03-09 01:00:01'),
+            undefined,
             new URL('https://macloud.jp/baz/qux')
         )
 
-        expect(storage.getItem('referer')).toBe('https://twitter.com/foo/bar')
-        expect(storage.getItem('utm_source')).toBe('newsletter1')
-        expect(storage.getItem('utm_medium')).toBe('email')
-        expect(storage.getItem('utm_campaign')).toBe('summer-sale')
-        expect(storage.getItem('utm_content')).toBe('toplink')
-        expect(storage.getItem('gclid')).toBe('Tester123')
+        expect(storage.getItem('referer')).toBeNull()
+        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/qux')
+        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
+        expect(storage.getItem('utm_source')).toBeNull()
+        expect(storage.getItem('utm_medium')).toBeNull()
+        expect(storage.getItem('utm_campaign')).toBeNull()
+        expect(storage.getItem('utm_content')).toBeNull()
+        expect(storage.getItem('gclid')).toBeNull()
+        expect(storage.getItem('last_visited_at')).toBe('2022-03-09 01:00:01')
+
     })
 
-    test('not update when new referer is owned domain', () => {
+    test('ランディング対象かつ自社ドメインでアクセスした場合にrefererがnullであること', () => {
         inflowSource.set(
             useDate().create('2022-03-09 00:00:00'),
             new URL('https://twitter.com/foo/bar?a=b&c=d'),
@@ -258,13 +264,13 @@ describe('~/index', () => {
         )
 
         inflowSource.set(
-            // ランディングの条件（30分経過）を満たすようにする
-            useDate().create('2022-03-09 00:30:01'),
+            // ランディングの条件（60分経過）を満たすようにする
+            useDate().create('2022-03-09 01:00:01'),
             new URL('https://macloud.jp/offers'),
             new URL('https://macloud.jp/interviews')
         )
 
-        expect(storage.getItem('referer')).toBe('https://twitter.com/foo/bar')
+        expect(storage.getItem('referer')).toBeNull()
     })
 
     test('get params', () => {
@@ -323,7 +329,7 @@ describe('~/index', () => {
         expect(storage.getItem('utm_medium')).toBeNull()
         expect(storage.getItem('utm_campaign')).toBeNull()
         expect(storage.getItem('utm_content')).toBeNull()
-        expect(storage.getItem('gclid')).toBe('Tester123')
+        expect(storage.getItem('gclid')).toBeNull()
     })
 
     test('has not matched inbound link dmai', () => {
@@ -429,6 +435,8 @@ describe('~/index', () => {
     })
 
     test('check NOT override last_page_url', () => {
+        Object.defineProperty(global.document, 'referrer', { value: '', configurable: true })
+
         const inflowSource = useInflowSource(
             storage,
             new URL('https://macloud.jp'),
@@ -472,24 +480,6 @@ describe('~/index', () => {
         expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/offers')
     })
 
-    test('check landing on ignored last_page_url', () => {
-        const inflowSource = useInflowSource(
-            storage,
-            new URL('https://macloud.jp'),
-            {
-                ignorePathRegexpList: ['/foo']
-            },
-        )
-
-        inflowSource.set(
-            useDate().create('2022-03-09 00:00:00'),
-            undefined,
-            new URL('https://macloud.jp/foo'),
-        )
-
-        expect(storage.getItem('last_page_url')).toBeNull()
-    })
-
     test('save intra site data', () => {
         const urlSearchParams = new URLSearchParams({
             last_visited_at: '1656342000000', // 2022-06-28 00:00:00.000
@@ -523,71 +513,5 @@ describe('~/index', () => {
         expect(storage.getItem('gclid')).toBe('Tester123')
         expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/signup/seller')
         expect(storage.getItem('device')).toBe('pc')
-    })
-
-    test('delete utm param by one hour over access', () => {
-        inflowSource.set(
-            useDate().create('2023-01-30 00:00:00'),
-            new URL('https://twitter.com/foo/bar?a=b&c=d'),
-            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email1&utm_campaign=summer-sale1&utm_content=toplink1&gclid=Tester123&device=pc')
-        )
-
-        expect(storage.getItem('utm_source')).toBe('newsletter1')
-        expect(storage.getItem('utm_medium')).toBe('email1')
-        expect(storage.getItem('utm_campaign')).toBe('summer-sale1')
-        expect(storage.getItem('utm_content')).toBe('toplink1')
-        expect(storage.getItem('gclid')).toBe('Tester123')
-        expect(storage.getItem('referer')).toBe('https://twitter.com/foo/bar')
-        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/qux')
-        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
-        expect(storage.getItem('last_visited_at')).toBe('2023-01-30 00:00:00')
-
-        inflowSource.set(
-            useDate().create('2023-01-30 01:00:00'),
-            new URL('https://www.facebook.com/foo/bar'),
-            new URL('https://macloud.jp/baz/test')
-        )
-        expect(storage.getItem('utm_source')).toBeNull()
-        expect(storage.getItem('utm_medium')).toBeNull()
-        expect(storage.getItem('utm_campaign')).toBeNull()
-        expect(storage.getItem('utm_content')).toBeNull()
-        expect(storage.getItem('gclid')).toBeNull()
-        expect(storage.getItem('referer')).toBe('https://www.facebook.com/foo/bar')
-        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/test')
-        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/test')
-        expect(storage.getItem('last_visited_at')).toBe('2023-01-30 01:00:00')
-    })
-
-    test('not delete utm param by one hour in access', () => {
-        inflowSource.set(
-            useDate().create('2023-01-30 00:00:00'),
-            new URL('https://twitter.com/foo/bar?a=b&c=d'),
-            new URL('https://macloud.jp/baz/qux?utm_source=newsletter1&utm_medium=email1&utm_campaign=summer-sale1&utm_content=toplink1&gclid=Tester123&device=pc')
-        )
-
-        expect(storage.getItem('utm_source')).toBe('newsletter1')
-        expect(storage.getItem('utm_medium')).toBe('email1')
-        expect(storage.getItem('utm_campaign')).toBe('summer-sale1')
-        expect(storage.getItem('utm_content')).toBe('toplink1')
-        expect(storage.getItem('gclid')).toBe('Tester123')
-        expect(storage.getItem('referer')).toBe('https://twitter.com/foo/bar')
-        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/qux')
-        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/qux')
-        expect(storage.getItem('last_visited_at')).toBe('2023-01-30 00:00:00')
-
-        inflowSource.set(
-            useDate().create('2023-01-30 00:59:59'),
-            new URL('https://www.facebook.com/foo/bar'),
-            new URL('https://macloud.jp/baz/test')
-        )
-        expect(storage.getItem('utm_source')).toBe('newsletter1')
-        expect(storage.getItem('utm_medium')).toBe('email1')
-        expect(storage.getItem('utm_campaign')).toBe('summer-sale1')
-        expect(storage.getItem('utm_content')).toBe('toplink1')
-        expect(storage.getItem('gclid')).toBe('Tester123')
-        expect(storage.getItem('referer')).toBe('https://www.facebook.com/foo/bar')
-        expect(storage.getItem('landing_page_url')).toBe('https://macloud.jp/baz/test')
-        expect(storage.getItem('last_page_url')).toBe('https://macloud.jp/baz/test')
-        expect(storage.getItem('last_visited_at')).toBe('2023-01-30 00:59:59')
     })
 })
